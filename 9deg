@@ -10,12 +10,12 @@ import glob
 from subprocess import check_call
 
 WarnLevel=1
-TMPDIR = os.path.join(os.environ["HOME"], '.tcpsub')
+TMPDIR = os.path.join(os.environ["HOME"], '.9deg')
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 3
+VERSION_MINOR = 4
 
-VER_STR = "tcpsub version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
+VER_STR = "9deg version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
 
 #=====================================================================
 # general utility functions
@@ -475,8 +475,16 @@ def show_version_exit(option, opt, value, parser):
     print VER_STR
     exit(0)
 
+def check_env():
+    from subprocess import Popen, PIPE
+    if not re.match(r'^t2', Popen(['hostname'], stdout=PIPE).communicate()[0]):
+        sys.stderr.write("ERROR: Seems your aren't on TSUBAME2.0 node. Try --emulate\n")
+        exit(-1)
+
 def main():
     global WarnLevel
+
+    check_env()
 
     app = Application()
     
