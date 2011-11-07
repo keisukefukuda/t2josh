@@ -29,7 +29,7 @@ while True:
 
 
         for l in re.split(r'\r|\n|\r\n', lines):
-            l = re.sub(r'user1/\d\d[BMD]\d\d\d\d\d', '00M00000', l)
+            l = re.sub(r'usr1/\d\d[BMD]\d\d\d\d\d', '00M00000', l)
             ofs.write("     %s\n" % l)
     else:
         ofs.write(ln)
