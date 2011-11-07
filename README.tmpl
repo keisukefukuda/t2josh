@@ -49,7 +49,7 @@ which includes generated t2sub command line as a comment.
 
 '--' is used to separate arguments for 9deg and program to be executed
 with its arguments. You can also write like
-$ 9deg -g t2g-yourgroup --dry "./a.out -n 1 2 3"
+     $ 9deg -g t2g-yourgroup --dry "./a.out -n 1 2 3"
 without "--". Since we used --dry option here, nothing is executed and we can observed
 what 9deg command was trying to do.
 
@@ -63,6 +63,7 @@ S queue is used by default. You can change queue by using -q option.
 
      $ ./9deg -n 8x4 -g t2g-yourgroup -q S ./a.out --dry
 
+produces:
 
 <% ./9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
 
@@ -70,6 +71,7 @@ S queue is used by default. You can change queue by using -q option.
 
      $ ./9deg --openmp=4 -g t2g-yourgroup -q S ./a.out --dry
 
+produces:
 
 <% ./9deg --openmp=4 -g t2g-yourgroup -q S ./a.out --dry %>
 
@@ -79,5 +81,6 @@ NOTE: -n options implies MPI, so if you want to run a non-MPI OpenMP program, yo
 
      $ ./9deg -n 4x4x2 -g t2g-yourgroup -q S ./a.out --dry
 
+produces:
 
 <% ./9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
