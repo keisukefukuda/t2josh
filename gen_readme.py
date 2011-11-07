@@ -22,8 +22,7 @@ while True:
 
     if len(ln) == 0: break
 
-    ln = ln.strip()
-    m = re.match('^<%(.*)%>$', ln)
+    m = re.match('^<%(.*)%>$', ln.strip())
     if m:
         cmdline = m.group(1)
         lines = Popen(['sh', '-c', cmdline], stdout=PIPE, stderr=PIPE).communicate()[0]
@@ -31,7 +30,7 @@ while True:
         for l in re.split(r'\r|\n|\r\n', lines):
             ofs.write("   %s\n" % l)
     else:
-        ofs.write(ln + "\n")
+        ofs.write(ln)
 
 ifs.close()
 ofs.close()

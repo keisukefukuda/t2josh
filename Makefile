@@ -1,3 +1,5 @@
+all: README.md README.ja.md
+
 README.md: README.tmpl
 	python gen_readme.py $< $@
 
