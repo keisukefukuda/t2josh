@@ -43,8 +43,6 @@ produces the below
 
 
 You can see the generated shell script and command line.
-The line beginning with '$' is the command we input, followed by
-output from 9deg command.
 
 Text between "#----" lines is content of the generated temporary shell script,
 which includes generated t2sub command line as a comment.
@@ -52,9 +50,7 @@ which includes generated t2sub command line as a comment.
 '--' is used to separate arguments for 9deg and program to be executed
 with its arguments. You can also write like
 $ 9deg -g t2g-yourgroup --dry "./a.out -n 1 2 3"
-without "--".
-
-Since we used --dry option here, nothing is executed and we can observed
+without "--". Since we used --dry option here, nothing is executed and we can observed
 what 9deg command was trying to do.
 
 "-g" option is used to specify your TSUBAME group. There is a warning
@@ -65,13 +61,15 @@ S queue is used by default. You can change queue by using -q option.
 
 ### Example: Invoke an MPI program on 4 nodes, with 8 processes per node.
 
-    $ ./9deg -n 8x4 -g t2g-yourgroup -q S ./a.out --dry
+     $ ./9deg -n 8x4 -g t2g-yourgroup -q S ./a.out --dry
+
 
 <% ./9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 ### Example: Invoke non-MPI OpenMP program
 
-    $ ./9deg --openmp=4 -g t2g-yourgroup -q S ./a.out --dry
+     $ ./9deg --openmp=4 -g t2g-yourgroup -q S ./a.out --dry
+
 
 <% ./9deg --openmp=4 -g t2g-yourgroup -q S ./a.out --dry %>
 
@@ -79,7 +77,7 @@ NOTE: -n options implies MPI, so if you want to run a non-MPI OpenMP program, yo
 
 ### Example: an MPI & OpenMP hybrid program
 
-    $ ./9deg -n 4x4x2 -g t2g-yourgroup -q S ./a.out --dry
+     $ ./9deg -n 4x4x2 -g t2g-yourgroup -q S ./a.out --dry
+
 
 <% ./9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
-
