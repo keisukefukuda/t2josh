@@ -68,7 +68,7 @@ $ 9deg -g t2g-yourgroup --dry "./a.out -n 1 2 3"
 
 出力:
 
-<% $ 9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% 9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 ### 例: MPIでない、OpenMPプログラムを実行する
 
@@ -76,7 +76,7 @@ $ 9deg -g t2g-yourgroup --dry "./a.out -n 1 2 3"
 
 出力:
 
-<% $ 9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% 9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 NOTE: -n オプションを使うと自動的にMPIプログラムであると判断されるため、MPIでないOpenMPプログラムを実行するためには'--openmp=N' オプションを使ってください。
 
@@ -87,4 +87,4 @@ NOTE: -n オプションを使うと自動的にMPIプログラムであると�
 
 出力:
 
-<% $ 9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
+<% 9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
