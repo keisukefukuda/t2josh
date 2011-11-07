@@ -38,7 +38,7 @@ Let's see some examples:
 
 produces the below
 
-<% ./9deg -g t2g-yourgroup --dry -- ./a.out -n 1 2 3 %>
+<% 9deg -g t2g-yourgroup --dry -- ./a.out -n 1 2 3 %>
 
 
 You can see the generated shell script and command line.
@@ -60,26 +60,26 @@ S queue is used by default. You can change queue by using -q option.
 
 ### Example: Invoke an MPI program on 4 nodes, with 8 processes per node.
 
-     $ ./9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out
+     $ 9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out
 
 produces:
 
-<% ./9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% 9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 ### Example: Invoke non-MPI OpenMP program
 
-     $ ./9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out
+     $ 9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out
 
 produces:
 
-<% ./9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% 9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 NOTE: -n options implies MPI, so if you want to run a non-MPI OpenMP program, you have to use '--openmp=N'.
 
 ### Example: an MPI & OpenMP hybrid program
 
-     $ ./9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out
+     $ 9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out
 
 produces:
 
-<% ./9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
+<% 9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
