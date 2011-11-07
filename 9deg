@@ -13,7 +13,7 @@ WarnLevel=1
 TMPDIR = os.path.join(os.environ["HOME"], '.9deg')
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 4
+VERSION_MINOR = 5
 
 VER_STR = "9deg version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
 
