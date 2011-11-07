@@ -1,11 +1,11 @@
 9deg - A job submittion helper for TSUBAME2.0
 =============================================
 
-### 警告
+English version is [here](https://github.com/keisukefukuda/9deg/blob/develop/README.md)
+
 本プログラムは無保証です。
 詳しいライセンスや使用条件については LICENSE ファイルを見てください。
 
-### 警告
 本プログラムは、第三者が提供しているものであり，
 東工大学術国際情報センターから提供されているものではありません。
 本プログラムについての意見・要望・問い合わせを同センターに送らないように
@@ -44,6 +44,8 @@ http://www.google.co.jp/#hl=ja&q=linux+PATH
 
     $ 9deg -g t2g-yourgroup --dry ./a.out -n 1 2 3
 
+この出力は下のようになります
+
 <% ./9deg -g t2g-yourgroup --dry ./a.out -n 1 2 3 %>
 
 "$"記号で始まる行が実際にTSUBAME上で打ち込んだコマンドを示しています。
@@ -63,16 +65,19 @@ $ 9deg -g t2g-yourgroup --dry "./a.out -n 1 2 3"
 ここでは、ダミーとして t2g-yourgroup という名前を指定したので、
 "そんなグループは存在しない"と警告が出ています。
 
-
 ### 例: MPIプログラム実行する
 
     $ ./9deg.py -n 8x4 -g t2g-yourgroup -q S --dry ./a.out
+
+出力:
 
 <% $ ./9deg.py -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 ### 例: MPIでない、OpenMPプログラムを実行する
 
     $ ./9deg.py --openmp=4 -g t2g-yourgroup -q S--dry  ./a.out
+
+出力:
 
 <% $ ./9deg.py --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
 
@@ -82,5 +87,7 @@ NOTE: -n オプションを使うと自動的にMPIプログラムであると�
 ### 例: MPIとOpenMPのハイブリッドプログラムを実行する
 
     $ ./9deg.py -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out
+
+出力:
 
 <% $ ./9deg.py -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>

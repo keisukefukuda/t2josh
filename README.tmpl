@@ -1,16 +1,15 @@
 9deg - A job submittion helper for TSUBAME2.0
 ==============================================
 
-### WARNING:
+Japanese version is [here](https://github.com/keisukefukuda/9deg/blob/develop/README.ja.md)
+
 This program is provided "as is", without any warranty.
 Please read LICENSE file for defails.
 
-### WARNING:
 This is a 'third-party' program. Please do NOT contact Tokyo Tech GSIC
 support desk about this program.
 Please send feature requests or bug reports to twitter/@keisukefukuda or
 keisukefukuda_at_gmail.com.
-
 
 Introduction
 ------------
@@ -61,7 +60,7 @@ S queue is used by default. You can change queue by using -q option.
 
 ### Example: Invoke an MPI program on 4 nodes, with 8 processes per node.
 
-     $ ./9deg -n 8x4 -g t2g-yourgroup -q S ./a.out --dry
+     $ ./9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out
 
 produces:
 
@@ -69,17 +68,17 @@ produces:
 
 ### Example: Invoke non-MPI OpenMP program
 
-     $ ./9deg --openmp=4 -g t2g-yourgroup -q S ./a.out --dry
+     $ ./9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out
 
 produces:
 
-<% ./9deg --openmp=4 -g t2g-yourgroup -q S ./a.out --dry %>
+<% ./9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 NOTE: -n options implies MPI, so if you want to run a non-MPI OpenMP program, you have to use '--openmp=N'.
 
 ### Example: an MPI & OpenMP hybrid program
 
-     $ ./9deg -n 4x4x2 -g t2g-yourgroup -q S ./a.out --dry
+     $ ./9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out
 
 produces:
 
