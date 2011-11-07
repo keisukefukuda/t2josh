@@ -28,7 +28,7 @@ while True:
         lines = Popen(['sh', '-c', cmdline], stdout=PIPE, stderr=PIPE).communicate()[0]
 
         for l in re.split(r'\r|\n|\r\n', lines):
-            ofs.write("   %s\n" % l)
+            ofs.write("     %s\n" % l)
     else:
         ofs.write(ln)
 
