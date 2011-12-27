@@ -177,7 +177,10 @@ class Tsubame():
             if re.search( pair[0], mpicc_path ):
                 return [pair[1]]
 
-            
+    @classmethod
+    def queue_names(self):
+        return [q['name'] for q in Tsubame.parse_t2stat()]
+        
     # Available environments from the TSUBAME manual.
     # Should be updated periodically
     MPI_Envs = ['openmpi+intel',
@@ -190,7 +193,8 @@ class Tsubame():
                 'mpich2+pgi',
                 'mpich2+gcc',]
     
-Tsubame.Queues = [q['name'] for q in Tsubame.parse_t2stat()]
+Tsubame.Queues = Tsubame.queue_names()
+
 
 class Builder():
     def __init__(self):
