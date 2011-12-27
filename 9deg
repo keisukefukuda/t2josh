@@ -6,6 +6,7 @@ import optparse
 import datetime
 import random
 import glob
+from logging import debug,info,warning,error,critical
 
 from subprocess import check_call
 
@@ -13,7 +14,7 @@ WarnLevel=1
 TMPDIR = os.path.join(os.environ["HOME"], '.9deg')
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 5
+VERSION_MINOR = 6
 
 VER_STR = "9deg version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
 
@@ -24,25 +25,24 @@ VER_STR = "9deg version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
 def match_all(s, regexs):
     return all( [re.search(reg,s) for reg in regexs] )
 
-def warning(msg):
-    if WarnLevel == 0:
-        return
-    
-    if WarnLevel == 1:
-        header = "Warning"
-    else:
-        header = "Error"
-
-    sys.stderr.write("*** %s: %s\n" % (header,msg))
-
-    if WarnLevel >= 2:
-        exit(-1)
-
 #=====================================================================
 # TSUBAME environment handler
 #=====================================================================
 class Tsubame():
-    Queues = ['S', 'S96', 'L128', 'L256', 'L512', 'G', 'V', 'Vw', 'Sw', 'H']
+    # TODO: Queue list should be automatically obtained throught "t2stat -Qf".
+    Queues = ['S', 'S96', 'L128', 'L128F', 'L256', 'L512', 'G', 'V', 'Vw', 'Sw', 'H']
+
+    # Available environments from the TSUBAME manual.
+    # Should be updated periodically
+    MPI_Envs = ['openmpi+intel',
+                'openmpi+pgi',
+                'openmpi+gcc',
+                'mvapich2+intel',
+                'mvapich2+pgi',
+                'mvapich2+gcc',
+                'mpich2+intel',
+                'mpich2+pgi',
+                'mpich2+gcc',]
     
     @classmethod
     def qname(self, q):
@@ -55,18 +55,9 @@ class Tsubame():
 
     @classmethod
     def list_mpienv_cand(self, key):
-        envs = ['openmpi+intel',
-                'openmpi+pgi',
-                'openmpi+gcc',
-                'mvapich2+intel',
-                'mvapich2+pgi',
-                'mvapich2+gcc',
-                'mpich2+intel',
-                'mpich2+pgi',
-                'mpich2+gcc',]
         regs = [ re.compile(reg) for reg in key.split('+') ]
 
-        cand = [ e for e in envs if match_all(e, regs) ]
+        cand = [ e for e in self.MPI_Envs if match_all(e, regs) ]
         return cand
 
     @classmethod
@@ -103,12 +94,13 @@ class Builder():
         self.ncpus = 1
         self.total_nprocs = 1
         self.omp = None
+        self.exported_envvars = set()
 
         # --- build arguments for t2sub command ---
 
-        error = False
+        is_err = False
         t2sub_args = []
-        l = []
+        l = [] # t2sub's -l option
 
         # select queue
         if opt.queue:
@@ -186,7 +178,7 @@ class Builder():
             if 1 <= opt.gpus and opt.gpus <= 3:
                 l += ["gpus=%d" % opt.gpus]
             else:
-                error=True
+                is_err=True
                 print "Error: --gpus must be between 1 to 3"
 
         t2sub_args += ["-l", ':'.join(l)]
@@ -207,7 +199,7 @@ class Builder():
 
         # CUDA version
         if opt.cuda_version:
-            if re.match(r'3(\.[012])?|4(\.0)?$', opt.cuda_version):
+            if re.match(r'3(\.[012])?|4(\.[01])?$', opt.cuda_version):
                 self.cuda_version = opt.cuda_version
             else:
                 error("Unknown CUDA Toolkit version : %s" % opt.cuda_version)
@@ -218,7 +210,7 @@ class Builder():
         # MPI environment
         if opt.mpi_env:
             if opt.mpi == "no":
-                error("'--mpi-env' is specified but '--mpi=no' is also specified.")
+                error("'--mpi-env' and '--mpi=no' cannot be used together.")
 
             opt.mpi = True
             # openmpi+intel, openmpi+pgi, mvapich2, mpich2
@@ -228,7 +220,10 @@ class Builder():
                 mpi_env = Tsubame.list_mpienv_cand(opt.mpi_env)
 
             if len(mpi_env) == 0:
-                raise RuntimeError, "Unknown MPI environment: %s" % opt.mpi_env
+                error("Unknown MPI environment: %s", opt.mpi_env)
+                error("Available MPI environments are: %s", ",".join(Tsubame.MPI_Envs))
+                exit(-1)
+            
             elif len(mpi_env) >= 2:
                 raise RuntimeError, "Anbiguous MPI environment: %s (%s)" % (opt.mpi_env,",".join(mpi_env))
             self.mpi_env = mpi_env[0]
@@ -239,8 +234,7 @@ class Builder():
         # Porcess placement
         if opt.place and len(opt.place) > 0:
             if opt.place not in ['free', 'scatter', 'pack']:
-                warning("Unknown process placement specification: "+
-                        "%s (they must be one of: free/scatter/pack)" % opt.place)
+                warning("Unknown process placement: %s (must be one of free,scatter,pack)", opt.place)
 
             t2sub_args += ['-l', 'place=' + opt.place]
 
@@ -254,7 +248,7 @@ class Builder():
         if opt.passthrough:
             t2sub_args += split_arg(opt.passthrough)
 
-        if error:
+        if is_err:
             raise RuntimeError
 
         # set job name
@@ -278,6 +272,7 @@ class Builder():
         if self.omp:
             sh += "export OMP_NUM_THREADS=%d\n" % self.omp
             sh += "\n"
+            self.exported_envvars.add('OMP_NUM_THREADS')
 
         if self.cuda_version:
             v = "%.1f" % float(self.cuda_version)
@@ -285,14 +280,20 @@ class Builder():
             sh += "export PATH=/opt/cuda/%s/bin:$PATH\n" % v
             sh += "\n"
 
-        # MPI & compiler  environment
+            self.exported_envvars.add('LD_LIBRARY_PATH')
+            self.exported_envvars.add('PATH')
+
+        # MPI & compiler environment
         if self.mpi_env:
             sh += read_env_settings(self.mpi_env)
             sh += "\n"
+            self.exported_envvars.add('PATH')
+            self.exported_envvars.add('LD_LIBRARY_PATH')
 
         if self.mpi:
-            sh += "mpirun -n %d -hostfile ${PBS_NODEFILE} %s\n" % (self.total_nprocs,
-                                                                   self.command)
+            # prepare "-x" options for mpirun
+            opt_x = " ".join( ["-x %s" % v for v in self.exported_envvars] )
+            sh += "mpirun %s -n %d -hostfile ${PBS_NODEFILE} %s\n" % (opt_x, self.total_nprocs, self.command)
         else:
             sh += self.command + "\n"
 
@@ -302,6 +303,7 @@ class Builder():
         return ["t2sub"] + self.t2sub_args
     
 
+# Main class of an application
 class Application():
     def __init__(self):
         self.setup()
@@ -512,7 +514,7 @@ def main():
                    type="string", default=None,
                    help="CUDA Toolkit version(3.0/3.1/3.2/4.0)")
     
-    opt.add_option("",   "--mpi-env", dest="mpi_env", default="auto",
+    opt.add_option("",   "--mpi-env", dest="mpi_env", default=None,
                    help="MPI environment (ex. Intel+OpenMPI, usually automatically selected)")
     
     opt.add_option("",   "--mpi", dest="mpi", action="store_true", default=True,
