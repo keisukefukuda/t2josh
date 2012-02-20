@@ -11,12 +11,12 @@ from logging import debug,info,warning,error,critical
 from subprocess import check_call
 
 WarnLevel=1
-TMPDIR = os.path.join(os.environ["HOME"], '.9deg')
+TMPDIR = os.path.join(os.environ["HOME"], '.t2josh')
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 6
 
-VER_STR = "9deg version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
+VER_STR = "t2josh version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
 
 #=====================================================================
 # general utility functions
