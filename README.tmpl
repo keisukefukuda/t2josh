@@ -38,7 +38,7 @@ Let's see some examples:
 
 produces the below
 
-<% t2josh -g t2g-yourgroup --dry -- ./a.out -n 1 2 3 %>
+<% ./t2josh -g t2g-yourgroup --dry -- ./a.out -n 1 2 3 %>
 
 
 You can see the generated shell script and command line.
@@ -64,7 +64,7 @@ S queue is used by default. You can change queue by using -q option.
 
 produces:
 
-<% t2josh -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 ### Example: Invoke non-MPI OpenMP program
 
@@ -72,7 +72,7 @@ produces:
 
 produces:
 
-<% t2josh --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 NOTE: -n options implies MPI, so if you want to run a non-MPI OpenMP program, you have to use '--openmp=N'.
 
@@ -82,4 +82,4 @@ NOTE: -n options implies MPI, so if you want to run a non-MPI OpenMP program, yo
 
 produces:
 
-<% t2josh -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>

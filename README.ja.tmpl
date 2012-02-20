@@ -46,7 +46,7 @@ http://www.google.co.jp/#hl=ja&q=linux+PATH
 
 この出力は下のようになります
 
-<% t2josh -g t2g-yourgroup --dry ./a.out -n 1 2 3 %>
+<% ./t2josh -g t2g-yourgroup --dry ./a.out -n 1 2 3 %>
 
 #-----で囲まれた範囲が、生成された一時シェルスクリプトを示しています。
 その中には、実行されるt2subコマンドもコメントとして含まれています。
@@ -68,7 +68,7 @@ $ t2josh -g t2g-yourgroup --dry "./a.out -n 1 2 3"
 
 出力:
 
-<% t2josh -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 ### 例: MPIでない、OpenMPプログラムを実行する
 
@@ -76,7 +76,7 @@ $ t2josh -g t2g-yourgroup --dry "./a.out -n 1 2 3"
 
 出力:
 
-<% t2josh --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 NOTE: -n オプションを使うと自動的にMPIプログラムであると判断されるため、MPIでないOpenMPプログラムを実行するためには'--openmp=N' オプションを使ってください。
 
@@ -87,4 +87,4 @@ NOTE: -n オプションを使うと自動的にMPIプログラムであると�
 
 出力:
 
-<% t2josh -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
