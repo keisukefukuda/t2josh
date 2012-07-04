@@ -13,8 +13,8 @@ from subprocess import check_call
 WarnLevel=1
 TMPDIR = os.path.join(os.environ["HOME"], '.t2josh')
 
-VERSION_MAJOR = 0
-VERSION_MINOR = 6
+VERSION_MAJOR = 2
+VERSION_MINOR = 0
 
 VER_STR = "t2josh version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
 
@@ -26,6 +26,7 @@ def match_all(s, regexs):
     return all( [re.search(reg,s) for reg in regexs] )
 
 def gen_tmp_name():
+    """Generate a unique temporary filename."""
     dt = datetime.datetime.today()
     pid = os.getpid()
     rnd = 0
@@ -96,7 +97,6 @@ class QueueInfo:
 
                 
 class Tsubame():
-
     Queues = None
     MPI_Envs = None
     

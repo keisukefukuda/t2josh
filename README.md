@@ -1,4 +1,4 @@
-t2josh 1.0 - A job submittion helper for TSUBAME2.0
+t2josh 2.0(alpha) - TSUBAME2.0 Job Submittion Helper
 ==============================================
 
 Japanese version is [here](https://github.com/keisukefukuda/t2josh/blob/master/README.ja.md)
@@ -9,13 +9,13 @@ Please read LICENSE file for defails.
 This is a 'third-party' program. Please do NOT contact Tokyo Tech GSIC
 support desk about this program.
 Please send feature requests or bug reports to twitter/@keisukefukuda or
-keisukefukuda_at_gmail.com.
+keisukefukuda_at_gmail_com.
 
 Introduction
 ------------
 
 t2josh is a job submission helper script for TSUBAME 2.0.
-To submit a job on TSUBAME2.0, you have to (1) prepare a job script which includes
+To submit a job on TSUBAME2.0, you need to (1) prepare a job script which includes
 environmental variable settings, and (2) call 't2sub' command with correct arguments,
 such as #node/#procs/#cups.
 
