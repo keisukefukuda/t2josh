@@ -1,4 +1,4 @@
-t2josh - A job submittion helper for TSUBAME2.0
+t2josh 1.0 - A job submittion helper for TSUBAME2.0
 ==============================================
 
 Japanese version is [here](https://github.com/keisukefukuda/t2josh/blob/master/README.ja.md)

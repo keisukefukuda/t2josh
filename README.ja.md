@@ -1,4 +1,4 @@
-9deg - A job submittion helper for TSUBAME2.0
+t2josh 1.0 - A job submittion helper for TSUBAME2.0
 =============================================
 
 English version is [here](https://github.com/keisukefukuda/t2josh/blob/master/README.md)
