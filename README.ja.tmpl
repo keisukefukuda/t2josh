@@ -1,7 +1,7 @@
 9deg - A job submittion helper for TSUBAME2.0
 =============================================
 
-English version is [here](https://github.com/keisukefukuda/9deg/blob/master/README.md)
+English version is [here](https://github.com/keisukefukuda/t2josh/blob/master/README.md)
 
 本プログラムは無保証です。
 詳しいライセンスや使用条件については LICENSE ファイルを見てください。
@@ -20,7 +20,7 @@ Introduction
 TSUBAME上でジョブを投入するためには、ジョブスクリプトを用意しt2subコマンドを
 正しいオプションで呼び出す必要があります．これは大変面倒な作業です．
 
-9degスクリプトはこの作業を自動化します．具体的には
+t2joshスクリプトはこの作業を自動化します．具体的には
 
  - シェルスクリプトを自動的に用意し、
  - プロセス数等の計算を自動的に行い、
@@ -34,26 +34,26 @@ Examples
 
 例を見てみましょう。
 
-その前に、9degのプログラムにパスが通っている必要があります。
-パスの通っているところに9degプログラムを置くか、パスを通す必要があります。
+その前に、t2joshのプログラムにパスが通っている必要があります。
+パスの通っているところにt2joshプログラムを置くか、パスを通す必要があります。
 「パスを通す」方法については、例えばこちら
 http://www.google.co.jp/#hl=ja&q=linux+PATH
 が参考になると思います。
 
 ### 例: 普通の逐次プログラムを実行する
 
-    $ 9deg -g t2g-yourgroup --dry ./a.out -n 1 2 3
+    $ t2josh -g t2g-yourgroup --dry ./a.out -n 1 2 3
 
 この出力は下のようになります
 
-<% 9deg -g t2g-yourgroup --dry ./a.out -n 1 2 3 %>
+<% ./t2josh -g t2g-yourgroup --dry ./a.out -n 1 2 3 %>
 
 #-----で囲まれた範囲が、生成された一時シェルスクリプトを示しています。
 その中には、実行されるt2subコマンドもコメントとして含まれています。
 
-"--" という記号が、9degへのオプションと実行すべきプログラム/オプション
+"--" という記号が、t2joshへのオプションと実行すべきプログラム/オプション
 を分離する役目を果たしています。"--"を使わずに、
-$ 9deg -g t2g-yourgroup --dry "./a.out -n 1 2 3"
+$ t2josh -g t2g-yourgroup --dry "./a.out -n 1 2 3"
 と書くこともできます。この場合、オプションの順番は自由です。
 ここで、--dryコマンドを使用したので、実際には処理は一切行われずに、
 生成されたスクリプトの内容とコマンドラインを見ることができます。
@@ -64,27 +64,27 @@ $ 9deg -g t2g-yourgroup --dry "./a.out -n 1 2 3"
 
 ### 例: MPIプログラム実行する
 
-    $ 9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out
+    $ t2josh -n 8x4 -g t2g-yourgroup -q S --dry ./a.out
 
 出力:
 
-<% 9deg -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh -n 8x4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 ### 例: MPIでない、OpenMPプログラムを実行する
 
-    $ 9deg --openmp=4 -g t2g-yourgroup -q S--dry  ./a.out
+    $ t2josh --openmp=4 -g t2g-yourgroup -q S--dry  ./a.out
 
 出力:
 
-<% 9deg --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh --openmp=4 -g t2g-yourgroup -q S --dry ./a.out %>
 
 NOTE: -n オプションを使うと自動的にMPIプログラムであると判断されるため、MPIでないOpenMPプログラムを実行するためには'--openmp=N' オプションを使ってください。
 
 
 ### 例: MPIとOpenMPのハイブリッドプログラムを実行する
 
-    $ 9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out
+    $ t2josh -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out
 
 出力:
 
-<% 9deg -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>
+<% ./t2josh -n 4x4x2 -g t2g-yourgroup -q S --dry ./a.out %>

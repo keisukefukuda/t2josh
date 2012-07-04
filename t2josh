@@ -6,16 +6,17 @@ import optparse
 import datetime
 import random
 import glob
+from logging import debug,info,warning,error,critical
 
 from subprocess import check_call
 
 WarnLevel=1
-TMPDIR = os.path.join(os.environ["HOME"], '.9deg')
+TMPDIR = os.path.join(os.environ["HOME"], '.t2josh')
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 5
+VERSION_MINOR = 6
 
-VER_STR = "9deg version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
+VER_STR = "t2josh version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
 
 #=====================================================================
 # general utility functions
@@ -24,25 +25,121 @@ VER_STR = "9deg version %d.%02d" % (VERSION_MAJOR, VERSION_MINOR)
 def match_all(s, regexs):
     return all( [re.search(reg,s) for reg in regexs] )
 
-def warning(msg):
-    if WarnLevel == 0:
-        return
-    
-    if WarnLevel == 1:
-        header = "Warning"
-    else:
-        header = "Error"
+def gen_tmp_name():
+    dt = datetime.datetime.today()
+    pid = os.getpid()
+    rnd = 0
 
-    sys.stderr.write("*** %s: %s\n" % (header,msg))
+    name = None
+    while True:
+        name = "%s_%d%d.sh" % (dt.strftime("%y%m%d%H%M%S"), pid % 100, rnd)
+        path = os.path.join(TMPDIR, name)
+        if not os.path.exists(path):
+            return path
 
-    if WarnLevel >= 2:
-        exit(-1)
+        rnd += 1
+
+def qx(*popenargs, **kwargs):
+    r"""Run command with arguments and return its output as a byte string.
+
+    If the exit code was non-zero it raises a CalledProcessError.  The
+    CalledProcessError object will have the return code in the returncode
+    attribute and output in the output attribute.
+
+    The arguments are the same as for the Popen constructor.  Example:
+
+    >>> check_output(["ls", "-l", "/dev/null"])
+    'crw-rw-rw- 1 root root 1, 3 Oct 18  2007 /dev/null\n'
+
+    The stdout argument is not allowed as it is used internally.
+    To capture standard error in the result, use stderr=STDOUT.
+
+    >>> check_output(["/bin/sh", "-c",
+    ...               "ls -l non_existent_file ; exit 0"],
+    ...              stderr=STDOUT)
+    'ls: non_existent_file: No such file or directory\n'
+
+    NOTE: This function is from Python 2.7 repository.
+    """
+    from subprocess import Popen, PIPE
+    if 'stdout' in kwargs:
+        raise ValueError('stdout argument not allowed, it will be overridden.')
+    process = Popen(stdout=PIPE, *popenargs, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        raise CalledProcessError(retcode, cmd, output=output)
+    return output
+
 
 #=====================================================================
 # TSUBAME environment handler
 #=====================================================================
+class QueueInfo:
+    """Obtain queue information by calling t2stat -Qf.
+
+    Queue information can be obtained from 'queue' member variable.
+    """
+    
+    def __init__(self, raw_data = None):
+        if raw_data is None:
+            raw_data = qx(['t2stat', '-Qf'])
+            
+        self._parse()
+
+    def names(self):
+        """Return a list of queue names"""
+        return [ q['name'] for q in self.queues ]
+
+                
 class Tsubame():
-    Queues = ['S', 'S96', 'L128', 'L256', 'L512', 'G', 'V', 'Vw', 'Sw', 'H']
+
+    Queues = None
+    MPI_Envs = None
+    
+    @classmethod
+    def parse_t2stat(self):
+        # Parse t2stat's output with a FSM
+        data = qx(['t2stat', '-Qf'])
+        queues = []
+        cur_q = {}
+        cur_key = None
+        cur_val = None
+
+        lines = re.split(r'\r\n|\r|\n', data)
+        
+        for ln in lines:
+            if re.match(r'^\s*$', ln): continue
+
+            elif re.match(r'^[^ \t]', ln):
+                # beginning of queue
+                if len(cur_q) > 0:
+                    queues.append(cur_q)
+                    cur_q = {}
+                m = re.match(r'Queue: (\w+)', ln)
+                if m:
+                    cur_q['name'] = m.group(1)
+                else:
+                    raise RuntimeError("Can't parse line : '%s'" % ln)
+
+            elif re.match(r'^ ', ln):
+                if cur_key and cur_val:
+                    cur_q[cur_key] = cur_val
+                    cur_key = None
+                    cur_val = None
+                m = re.match(r' +([A-Za-z0-9_.:-]+) = ([A-Za-z0-9_.:, [\]=+-]+)', ln)
+                cur_key = m.group(1)
+                cur_val = m.group(2)
+
+            elif re.match(r'^\t', ln):
+                # Cont. of a property value from the previous line
+                m = re.match(r'\s+([^ \t].*)$', ln)
+                cur_val += m.group(1)
+
+        return queues
     
     @classmethod
     def qname(self, q):
@@ -55,23 +152,14 @@ class Tsubame():
 
     @classmethod
     def list_mpienv_cand(self, key):
-        envs = ['openmpi+intel',
-                'openmpi+pgi',
-                'openmpi+gcc',
-                'mvapich2+intel',
-                'mvapich2+pgi',
-                'mvapich2+gcc',
-                'mpich2+intel',
-                'mpich2+pgi',
-                'mpich2+gcc',]
         regs = [ re.compile(reg) for reg in key.split('+') ]
 
-        cand = [ e for e in envs if match_all(e, regs) ]
+        cand = [ e for e in self.MPI_Envs if match_all(e, regs) ]
         return cand
 
     @classmethod
     def list_mpienv(self):
-        mpicc_path = qx( ['which', 'mpicc'] )
+        mpicc_path = qx(['which', 'mpicc'])
 
         tbl = [
             (r'openmpi/[0-9.]+/intel/bin',  'openmpi+intel'),
@@ -89,7 +177,25 @@ class Tsubame():
             if re.search( pair[0], mpicc_path ):
                 return [pair[1]]
 
-            
+    @classmethod
+    def queue_names(self):
+        return [q['name'] for q in Tsubame.parse_t2stat()]
+        
+    # Available environments from the TSUBAME manual.
+    # Should be updated periodically
+    MPI_Envs = ['openmpi+intel',
+                'openmpi+pgi',
+                'openmpi+gcc',
+                'mvapich2+intel',
+                'mvapich2+pgi',
+                'mvapich2+gcc',
+                'mpich2+intel',
+                'mpich2+pgi',
+                'mpich2+gcc',]
+    
+Tsubame.Queues = Tsubame.queue_names()
+
+
 class Builder():
     def __init__(self):
         pass
@@ -103,12 +209,13 @@ class Builder():
         self.ncpus = 1
         self.total_nprocs = 1
         self.omp = None
+        self.exported_envvars = set()
 
         # --- build arguments for t2sub command ---
 
-        error = False
+        is_err = False
         t2sub_args = []
-        l = []
+        l = [] # t2sub's -l option
 
         # select queue
         if opt.queue:
@@ -186,7 +293,7 @@ class Builder():
             if 1 <= opt.gpus and opt.gpus <= 3:
                 l += ["gpus=%d" % opt.gpus]
             else:
-                error=True
+                is_err=True
                 print "Error: --gpus must be between 1 to 3"
 
         t2sub_args += ["-l", ':'.join(l)]
@@ -207,7 +314,7 @@ class Builder():
 
         # CUDA version
         if opt.cuda_version:
-            if re.match(r'3(\.[012])?|4(\.0)?$', opt.cuda_version):
+            if re.match(r'3(\.[012])?|4(\.[01])?$', opt.cuda_version):
                 self.cuda_version = opt.cuda_version
             else:
                 error("Unknown CUDA Toolkit version : %s" % opt.cuda_version)
@@ -218,7 +325,7 @@ class Builder():
         # MPI environment
         if opt.mpi_env:
             if opt.mpi == "no":
-                error("'--mpi-env' is specified but '--mpi=no' is also specified.")
+                error("'--mpi-env' and '--mpi=no' cannot be used together.")
 
             opt.mpi = True
             # openmpi+intel, openmpi+pgi, mvapich2, mpich2
@@ -228,7 +335,10 @@ class Builder():
                 mpi_env = Tsubame.list_mpienv_cand(opt.mpi_env)
 
             if len(mpi_env) == 0:
-                raise RuntimeError, "Unknown MPI environment: %s" % opt.mpi_env
+                error("Unknown MPI environment: %s", opt.mpi_env)
+                error("Available MPI environments are: %s", ",".join(Tsubame.MPI_Envs))
+                exit(-1)
+            
             elif len(mpi_env) >= 2:
                 raise RuntimeError, "Anbiguous MPI environment: %s (%s)" % (opt.mpi_env,",".join(mpi_env))
             self.mpi_env = mpi_env[0]
@@ -239,8 +349,7 @@ class Builder():
         # Porcess placement
         if opt.place and len(opt.place) > 0:
             if opt.place not in ['free', 'scatter', 'pack']:
-                warning("Unknown process placement specification: "+
-                        "%s (they must be one of: free/scatter/pack)" % opt.place)
+                warning("Unknown process placement: %s (must be one of free,scatter,pack)", opt.place)
 
             t2sub_args += ['-l', 'place=' + opt.place]
 
@@ -254,7 +363,7 @@ class Builder():
         if opt.passthrough:
             t2sub_args += split_arg(opt.passthrough)
 
-        if error:
+        if is_err:
             raise RuntimeError
 
         # set job name
@@ -278,6 +387,7 @@ class Builder():
         if self.omp:
             sh += "export OMP_NUM_THREADS=%d\n" % self.omp
             sh += "\n"
+            self.exported_envvars.add('OMP_NUM_THREADS')
 
         if self.cuda_version:
             v = "%.1f" % float(self.cuda_version)
@@ -285,14 +395,20 @@ class Builder():
             sh += "export PATH=/opt/cuda/%s/bin:$PATH\n" % v
             sh += "\n"
 
-        # MPI & compiler  environment
+            self.exported_envvars.add('LD_LIBRARY_PATH')
+            self.exported_envvars.add('PATH')
+
+        # MPI & compiler environment
         if self.mpi_env:
             sh += read_env_settings(self.mpi_env)
             sh += "\n"
+            self.exported_envvars.add('PATH')
+            self.exported_envvars.add('LD_LIBRARY_PATH')
 
         if self.mpi:
-            sh += "mpirun -n %d -hostfile ${PBS_NODEFILE} %s\n" % (self.total_nprocs,
-                                                                   self.command)
+            # prepare "-x" options for mpirun
+            opt_x = " ".join( ["-x %s" % v for v in self.exported_envvars] )
+            sh += "mpirun %s -n %d -hostfile ${PBS_NODEFILE} %s\n" % (opt_x, self.total_nprocs, self.command)
         else:
             sh += self.command + "\n"
 
@@ -300,8 +416,9 @@ class Builder():
 
     def gen_command(self):
         return ["t2sub"] + self.t2sub_args
-    
 
+
+# Main class of an application
 class Application():
     def __init__(self):
         self.setup()
@@ -313,56 +430,6 @@ class Application():
         if not os.path.exists(TMPDIR):
             os.mkdir(TMPDIR)
             
-
-def gen_tmp_name():
-    dt = datetime.datetime.today()
-    pid = os.getpid()
-    rnd = 0
-
-    name = None
-    while True:
-        name = "%s_%d%d.sh" % (dt.strftime("%y%m%d%H%M%S"), pid % 100, rnd)
-        path = os.path.join(TMPDIR, name)
-        if not os.path.exists(path):
-            return path
-
-        rnd += 1
-
-def qx(*popenargs, **kwargs):
-    r"""Run command with arguments and return its output as a byte string.
-
-    If the exit code was non-zero it raises a CalledProcessError.  The
-    CalledProcessError object will have the return code in the returncode
-    attribute and output in the output attribute.
-
-    The arguments are the same as for the Popen constructor.  Example:
-
-    >>> check_output(["ls", "-l", "/dev/null"])
-    'crw-rw-rw- 1 root root 1, 3 Oct 18  2007 /dev/null\n'
-
-    The stdout argument is not allowed as it is used internally.
-    To capture standard error in the result, use stderr=STDOUT.
-
-    >>> check_output(["/bin/sh", "-c",
-    ...               "ls -l non_existent_file ; exit 0"],
-    ...              stderr=STDOUT)
-    'ls: non_existent_file: No such file or directory\n'
-
-    NOTE: This function is from Python 2.7 repository.
-    """
-    from subprocess import Popen, PIPE
-    if 'stdout' in kwargs:
-        raise ValueError('stdout argument not allowed, it will be overridden.')
-    process = Popen(stdout=PIPE, *popenargs, **kwargs)
-    output, unused_err = process.communicate()
-    retcode = process.poll()
-    if retcode:
-        cmd = kwargs.get("args")
-        if cmd is None:
-            cmd = popenargs[0]
-        raise CalledProcessError(retcode, cmd, output=output)
-    return output
-
 
 
 def find_groups():
@@ -512,7 +579,7 @@ def main():
                    type="string", default=None,
                    help="CUDA Toolkit version(3.0/3.1/3.2/4.0)")
     
-    opt.add_option("",   "--mpi-env", dest="mpi_env", default="auto",
+    opt.add_option("",   "--mpi-env", dest="mpi_env", default=None,
                    help="MPI environment (ex. Intel+OpenMPI, usually automatically selected)")
     
     opt.add_option("",   "--mpi", dest="mpi", action="store_true", default=True,

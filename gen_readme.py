@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE
 
 if len(sys.argv) != 3:
     sys.stderr.write("Usage: gen_readme.py INPUT OUTPUT")
+    exit(-1)
 
 if sys.argv[1] == "-":
     ifs = sys.stdin
