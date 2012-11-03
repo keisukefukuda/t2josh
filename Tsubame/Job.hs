@@ -1,12 +1,12 @@
-module Tsubame where
+module Tsubame.Job (
+  Queue(..),
+  Job(..),
+  queueName,
+  parseJobs
+  ) where
 
-import System.Environment
-import System.Process
-import System.Console.GetOpt
-import Data.Time.Clock
 import Data.List
 import Text.Regex
-import Control.Monad
 import Debug.Trace
 
 data Queue = S | S96 | X | H | L128 | L128F | L256 | L512 | V | G
@@ -20,19 +20,6 @@ data Job = Job { jobID    :: String
                , jobQueue :: Queue
                } deriving(Show)
 
-data Compiler   = Intel | PGI | GNU
-data MPILibrary = OpenMPI | MVAPICH2 | MVAPICH1
-
-data JobQuery = JobQuery [String]  -- commands
-                         Queue     -- queue
-                         (Maybe Int) -- openmp (serial if Nothing)
-                         (Maybe Int) -- mpi    (serial if Nothing)
-                         (Maybe Int) -- CUDA   (CUDA version)
-              deriving(Show)
-
--- TODO : Switch Compiler & MPI library
-
--- Get queue name from a Job value
 queueName :: String -> String -> Queue
 queueName id q =
   case q of
@@ -50,6 +37,9 @@ queueName id q =
     _ -> if "R" `isPrefixOf` q
          then H
          else error ("Unkown Queue Name:" ++ q)
+
+parseJobs :: String -> [Job]
+parseJobs strs = filterNothing $ map parseJob $ lines strs
 
 parseJob :: String -> Maybe(Job)
 parseJob str =
@@ -81,34 +71,3 @@ parseJob str =
 filterNothing :: [Maybe Job] -> [Job]
 filterNothing jobs =
   foldl (\ls x -> case x of Nothing -> ls; Just a -> ls ++ [a]) [] jobs
-
-{-
-  ***  Command Launcher  ***
--}
-    
-t2statAll :: IO ([Job])
-t2statAll = do
-  src <- readProcess "t2stat" ["-all", "-w"] ""
-  return $ filterNothing $ map parseJob $ lines src
-                               
-t2stat :: IO ([Job])
-t2stat = do
-  src <- readProcess "t2stat" [] ""
-  return $ filterNothing $ map parseJob $ lines src
-
-{-
-  ***  Option Parsing  ***
--}
-    
-data Flag = Version
-options :: [OptDescr Flag]
-options = [ Option ['V'] ["version"] (NoArg Version) "Show version number" ]
-
-main :: IO()
-main = do
-  args <- getArgs
-  let (flags, nonOpts, msgs) = getOpt RequireOrder options args
-
-  jobs <- t2statAll
-  mapM_ (putStrLn . show . jobDuration) jobs
-  return ()
