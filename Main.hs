@@ -5,6 +5,7 @@ import System.Environment
 import System.Exit
 
 import Control.Monad
+import Control.Monad.Writer
 
 import Tsubame.T2Stat
 import Tsubame.T2Group
@@ -103,11 +104,11 @@ main = do
   putStrLn $ show nonOpts
 
   groups <- t2group
-  let (script, command) = parseRequest flags nonOpts groups
   putStrLn "Script content = "
-  putStrLn script
   putStrLn "t2sub command line = "
-  putStrLn command
+  let (cmd, msg) = runWriter $ buildCmd flags args groups
+  mapM_ (\x -> putStrLn $ "t2sub: Warning: " ++ x) msg
+  print cmd
 
   -- jobs <- t2statAll
   -- mapM_ (putStrLn . show . jobDuration) jobs

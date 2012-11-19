@@ -1,10 +1,12 @@
 module Tsubame.T2Sub (
   Flag(..),
-  parseRequest,
+  buildScr,
+  buildCmd,
   ) where
 
 import Data.List
 import Control.Monad.Writer
+import Control.Monad.Identity
 
 data Flag = OptVersion
           | OptNumProc String
@@ -33,11 +35,8 @@ data Flag = OptVersion
 data Compiler   = Intel | PGI | GNU
 data MPILibrary = OpenMPI | MVAPICH2 | MVAPICH1
 
-parseRequest :: [Flag] -> [String] -> [String] -> (String, String)
-parseRequest flags args groups = (genScript flags args groups, buildCmd flags args groups)
-
-genScript :: [Flag] -> [String] -> [String] -> String
-genScript flags args groups = "Script!!"
+buildScr :: [Flag] -> [String] -> [String] -> Writer [String] String
+buildScr flags args groups = return "Script!!"
 
 strJoin :: String -> [String] -> String
 strJoin sep xs =
@@ -47,17 +46,19 @@ flagGroup :: [Flag] -> [String] -> [String] -> String
 flagGroup flags args groups = groups !! 0
 
 -- Construct t2sub command line
-buildCmd :: [Flag] -> [String] -> [String] -> String
-buildCmd flags args groups =
-  strJoin " " $ ["t2sub"] ++ (chooseGroup flags groups)
+buildCmd :: [Flag] -> [String] -> [String] -> Writer [String] [String]
+buildCmd flags args groups = do
+  group <- chooseGroup flags groups
+  return (["t2sub"] ++ group)
 
 -- Generate "-g" option from flags
-chooseGroup :: [Flag] -> [String] -> [String]
-chooseGroup [] groups = []
+chooseGroup :: [Flag] -> [String] -> Writer [String] [String]
+chooseGroup [] groups = return []
 chooseGroup (x:xs) groups =
   case x of
     OptGroup g -> if g `elem` groups
-                  then ["-g", g]
-                  else error ("You do not belong to a group \"" ++ g ++ "\"")
-    _          -> chooseGroup xs groups
+                  then return ["-g", g]
+                  else WriterT $ Identity (["-g", g],
+                                           ["You do not belong to a group \"" ++ g ++ "\""])
+    _ -> chooseGroup xs groups
   
