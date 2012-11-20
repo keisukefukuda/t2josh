@@ -56,13 +56,21 @@ buildCmd' flags args groups = do
 -- Generate "-g" option from flags
 chooseGroup :: [Flag] -> [String] -> Writer [String] [String]
 chooseGroup [] groups = WriterT $ Identity ([], ["TSUBAME group is not specified."])
-chooseGroup (x:xs) groups =
-  case x of
-    OptGroup g -> WriterT $ Identity (["-W", "group_list=" ++ g],
-                                      if g `elem` groups
-                                      then []
-                                      else ["You do not belong to a group \"" ++ g ++ "\""])
-    _ -> chooseGroup xs groups
+chooseGroup flags groups =
+  let opts = map (\x -> case x of OptGroup s -> s; _ -> "") flags
+      grps = filter (\x -> length x > 0) opts
+  in
+   case length grps of
+     0 -> WriterT $ Identity ([], ["No TSUBAME group is specified."])
+     1 -> WriterT $ Identity (["-W", "group_list=" ++ (grps !! 0)],
+                              if (grps !! 0) `elem` groups
+                              then [""]
+                              else ["You do not belong to TSUBAME group " ++ (grps !! 0)])
+     _ -> error "More than one TSUBAME group is specified."
+
+   {-
+chooseWalltime :: [Flag] -> Writer [String] [String]
+chooseWalltime flags =
+  -}
 
 --chooseAttr :: [Flag] -> Writer [String] [String]
-   
