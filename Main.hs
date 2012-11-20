@@ -77,7 +77,6 @@ options = [ Option ['s'] ["select"]   (ReqArg OptNumProc "SELECT")    "Number of
           , Option ['N'] ["job-name"] (ReqArg OptJobName "JOB_NAME")  "Job name"
           , Option ['p'] []           (ReqArg OptPriori "PRIORITY")   "Job priority (0|1|2)"
           , Option ['r'] []           (NoArg OptRerunnable)           "A job is rerunnable"
-          , Option []    ["version"]  (NoArg OptVersion)              "Show version number"
           , Option ['h','?'] ["help"] (NoArg OptHelp)                 "Show help message"
           , Option ['S'] []           (ReqArg OptJobIntp "PATHS")     "Script interpreter"
           , Option ['v'] []           (ReqArg OptVars "VARS")         "Environment variables (var1=A[,var2=B,...])"
@@ -85,6 +84,7 @@ options = [ Option ['s'] ["select"]   (ReqArg OptNumProc "SELECT")    "Number of
           , Option ['W'] []           (ReqArg OptAttrs "ATTRS")       "Additional job attributes (attr1=value1[,attr2=value2,...])"
           , Option ['z'] []           (NoArg OptQuiet)                "Do not print the job identifier"
           , Option [] ["verify"]      (NoArg OptVerify)               "Only verififes options and do not submit a job."
+          , Option [] ["version"]     (NoArg OptVersion)              "Show version number"
           , Option [] ["dry"]         (NoArg OptDryrun)               "Just print the generated sciprt and do not run. Implies --verify."
           ]
 

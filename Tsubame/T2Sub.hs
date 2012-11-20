@@ -68,9 +68,4 @@ chooseGroup flags groups =
                               else ["You do not belong to TSUBAME group " ++ (grps !! 0)])
      _ -> error "More than one TSUBAME group is specified."
 
-   {-
-chooseWalltime :: [Flag] -> Writer [String] [String]
-chooseWalltime flags =
-  -}
-
 --chooseAttr :: [Flag] -> Writer [String] [String]
