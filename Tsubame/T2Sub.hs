@@ -51,14 +51,14 @@ buildCmd flags args groups = do
 buildCmd' :: [Flag] -> [String] -> [String] -> Writer [String] [String]
 buildCmd' flags args groups = do
   group <- chooseGroup flags groups
-  return (["t2sub"] ++ group)
+  attrs <- chooseAttr flags
+  return (["t2sub"] ++ group ++ attrs)
 
 -- Generate "-g" option from flags
 chooseGroup :: [Flag] -> [String] -> Writer [String] [String]
 chooseGroup [] groups = WriterT $ Identity ([], ["TSUBAME group is not specified."])
 chooseGroup flags groups =
-  let opts = map (\x -> case x of OptGroup s -> s; _ -> "") flags
-      grps = filter (\x -> length x > 0) opts
+  let grps = concatMap (\x -> case x of OptGroup s -> [s]; _ -> []) flags
   in
    case length grps of
      0 -> WriterT $ Identity ([], ["No TSUBAME group is specified."])
@@ -68,4 +68,9 @@ chooseGroup flags groups =
                               else ["You do not belong to TSUBAME group " ++ (grps !! 0)])
      _ -> error "More than one TSUBAME group is specified."
 
---chooseAttr :: [Flag] -> Writer [String] [String]
+chooseAttr :: [Flag] -> Writer [String] [String]
+chooseAttr flags =
+  let attrs = concatMap (\x -> case x of OptAttrs s -> [s]; _ -> []) flags
+  in
+   return $ concat $ map (\x -> ["-W", x]) attrs
+
