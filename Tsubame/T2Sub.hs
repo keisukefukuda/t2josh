@@ -42,23 +42,27 @@ strJoin :: String -> [String] -> String
 strJoin sep xs =
   foldl (\s x -> if (length s) == 0 then x else s ++ sep ++ x) "" xs
 
-flagGroup :: [Flag] -> [String] -> [String] -> String
-flagGroup flags args groups = groups !! 0
-
 -- Construct t2sub command line
-buildCmd :: [Flag] -> [String] -> [String] -> Writer [String] [String]
+buildCmd :: [Flag] -> [String] -> [String] -> Writer [String] String
 buildCmd flags args groups = do
+  let (cmds, msgs) = runWriter $ buildCmd' flags args groups
+  WriterT $ Identity (strJoin " " cmds, msgs)
+
+buildCmd' :: [Flag] -> [String] -> [String] -> Writer [String] [String]
+buildCmd' flags args groups = do
   group <- chooseGroup flags groups
   return (["t2sub"] ++ group)
 
 -- Generate "-g" option from flags
 chooseGroup :: [Flag] -> [String] -> Writer [String] [String]
-chooseGroup [] groups = return []
+chooseGroup [] groups = WriterT $ Identity ([], ["TSUBAME group is not specified."])
 chooseGroup (x:xs) groups =
   case x of
-    OptGroup g -> if g `elem` groups
-                  then return ["-g", g]
-                  else WriterT $ Identity (["-g", g],
-                                           ["You do not belong to a group \"" ++ g ++ "\""])
+    OptGroup g -> WriterT $ Identity (["-W", "group_list=" ++ g],
+                                      if g `elem` groups
+                                      then []
+                                      else ["You do not belong to a group \"" ++ g ++ "\""])
     _ -> chooseGroup xs groups
-  
+
+--chooseAttr :: [Flag] -> Writer [String] [String]
+   
