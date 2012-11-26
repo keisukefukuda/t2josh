@@ -8,9 +8,11 @@ import Data.List
 import Data.Char
 import Control.Monad.Writer
 import Control.Monad.Identity
+import Tsubame.Utils
 
 data Flag = OptVersion
           | OptNumProc String
+          | OptWalltime String
           | OptQueue String
           | OptGroup String
           | OptInclude String
@@ -54,7 +56,8 @@ buildCmd' flags args groups = do
   group <- chooseGroup flags groups
   attrs <- chooseAttr flags
   queue <- chooseQueue flags
-  return (["t2sub"] ++ queue ++ group ++ attrs)
+  wtime <- chooseWalltime flags
+  return (["t2sub"] ++ queue ++ group ++ attrs ++ wtime)
 
 -- Generate "-g" option from flags
 chooseGroup :: [Flag] -> [String] -> Writer [String] [String]
@@ -66,7 +69,7 @@ chooseGroup flags groups =
      0 -> WriterT $ Identity ([], ["No TSUBAME group is specified."])
      1 -> WriterT $ Identity (["-W", "group_list=" ++ (grps !! 0)],
                               if (grps !! 0) `elem` groups
-                              then [""]
+                              then []
                               else ["You do not belong to TSUBAME group " ++ (grps !! 0)])
      _ -> error "More than one TSUBAME group is specified."
 
@@ -95,6 +98,11 @@ chooseQueue flags =
               then q
               else error $ "Error: Unknown queue name : " ++ q
 
-        
-    
-      
+chooseWalltime :: [Flag] -> Writer [String] [String]
+chooseWalltime flags =
+  let wtimes = concatMap (\x -> case x of OptWalltime s -> [s]; _ -> []) flags
+  in case length wtimes of
+    0 -> return []
+    1 -> return ["-l", "walltime=" ++ (wtimes !! 0)]
+    _ -> WriterT $ Identity (["-l", "walltime=" ++ (last $ sortBy compWtime wtimes)],
+                             ["Multiple walltime is specified. Using the longest one."])

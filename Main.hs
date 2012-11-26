@@ -65,6 +65,7 @@ Equivalent to:
 
 options :: [OptDescr Flag]
 options = [ Option ['s'] ["select"]   (ReqArg OptNumProc "SELECT")    "Number of nodes/processes/threads/gpus. See --help"
+          , Option [] ["walltime"]    (ReqArg OptWalltime "WTIME")    "-l walltime=hh:mm:ss"
           , Option ['q'] ["queue"]    (ReqArg OptQueue "QUEUE")       "Queue name"
           , Option ['g'] ["group"]    (ReqArg OptGroup "GROUP")       "Tsubame group name"
           , Option ['I'] ["include"]  (ReqArg OptInclude "INCLUDE")   "include a shell script (See --help)"
