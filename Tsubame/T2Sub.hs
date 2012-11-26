@@ -5,6 +5,7 @@ module Tsubame.T2Sub (
   ) where
 
 import Data.List
+import Data.Char
 import Control.Monad.Writer
 import Control.Monad.Identity
 
@@ -52,7 +53,8 @@ buildCmd' :: [Flag] -> [String] -> [String] -> Writer [String] [String]
 buildCmd' flags args groups = do
   group <- chooseGroup flags groups
   attrs <- chooseAttr flags
-  return (["t2sub"] ++ group ++ attrs)
+  queue <- chooseQueue flags
+  return (["t2sub"] ++ queue ++ group ++ attrs)
 
 -- Generate "-g" option from flags
 chooseGroup :: [Flag] -> [String] -> Writer [String] [String]
@@ -74,3 +76,25 @@ chooseAttr flags =
   in
    return $ concat $ map (\x -> ["-W", x]) attrs
 
+chooseQueue :: [Flag] -> Writer [String] [String]
+chooseQueue flags =
+  let queue = concatMap (\x -> case x of OptQueue s -> [s]; _ -> []) flags
+      msgs = case length queue of
+        0 -> ["No queue name is specified. Using S instead."]
+        1 -> []
+        _ -> ["More than 1 queue is specified. Using the first one."]
+      queue2 = queue ++ ["S"]
+  in
+   WriterT $ Identity (["-q", queueName (queue2 !! 0)], msgs)
+  where
+    queueName :: String -> String
+    queueName q =
+      let q' = map toUpper q
+      in if q' == "X" then "S"
+         else if q' `elem` ["S", "S96", "L128", "L256", "L512", "G", "V", "VW", "SW", "H"]
+              then q
+              else error $ "Error: Unknown queue name : " ++ q
+
+        
+    
+      
