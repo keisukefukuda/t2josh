@@ -12,9 +12,9 @@ import Tsubame.Utils
 
 data Flag = OptVersion
           | OptNumProc String
-          | OptWalltime String
-          | OptQueue String
-          | OptGroup String
+          | OptWalltime String -- done
+          | OptQueue String    -- done
+          | OptGroup String    -- done
           | OptInclude String
           | OptPrompt
           | OptJoin String
@@ -57,7 +57,8 @@ buildCmd' flags args groups = do
   attrs <- chooseAttr flags
   queue <- chooseQueue flags
   wtime <- chooseWalltime flags
-  return (["t2sub"] ++ queue ++ group ++ attrs ++ wtime)
+  join  <- chooseJoin flags
+  return (["t2sub"] ++ queue ++ group ++ attrs ++ wtime ++ join)
 
 -- Generate "-g" option from flags
 chooseGroup :: [Flag] -> [String] -> Writer [String] [String]
@@ -106,3 +107,15 @@ chooseWalltime flags =
     1 -> return ["-l", "walltime=" ++ (wtimes !! 0)]
     _ -> WriterT $ Identity (["-l", "walltime=" ++ (last $ sortBy compWtime wtimes)],
                              ["Multiple walltime is specified. Using the longest one."])
+
+chooseJoin :: [Flag] -> Writer [String] [String]
+chooseJoin flags =
+  let joins = concatMap (\x -> case x of OptJoin s -> [s]; _ -> []) flags
+  in if length joins == 0
+     then return []
+     else let j = last joins
+              msgs = if length joins > 1 then ["-j specified multiple times"] else []
+          in if j `elem` ["oe", "eo", "n"]
+             then WriterT $ Identity (["-j", j], msgs)
+             else error ("Unknown option for -j : '" ++ j ++ "'")
+
