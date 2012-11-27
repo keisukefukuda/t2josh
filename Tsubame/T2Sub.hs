@@ -12,6 +12,7 @@ import Tsubame.Utils
 
 data Flag = OptVersion
           | OptNumProc String
+          | OptMemory String
           | OptWalltime String -- done
           | OptQueue String    -- done
           | OptGroup String    -- done
@@ -111,11 +112,4 @@ chooseWalltime flags =
 chooseJoin :: [Flag] -> Writer [String] [String]
 chooseJoin flags =
   let joins = concatMap (\x -> case x of OptJoin s -> [s]; _ -> []) flags
-  in if length joins == 0
-     then return []
-     else let j = last joins
-              msgs = if length joins > 1 then ["-j specified multiple times"] else []
-          in if j `elem` ["oe", "eo", "n"]
-             then WriterT $ Identity (["-j", j], msgs)
-             else error ("Unknown option for -j : '" ++ j ++ "'")
-
+  in return $ concat $ map (\x -> ["-j"] ++ [x]) joins
