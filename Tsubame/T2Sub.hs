@@ -83,22 +83,10 @@ chooseAttr flags =
 
 chooseQueue :: [Flag] -> Writer [String] [String]
 chooseQueue flags =
-  let queue = concatMap (\x -> case x of OptQueue s -> [s]; _ -> []) flags
-      msgs = case length queue of
-        0 -> ["No queue name is specified. Using S instead."]
-        1 -> []
-        _ -> ["More than 1 queue is specified. Using the first one."]
-      queue2 = queue ++ ["S"]
-  in
-   WriterT $ Identity (["-q", queueName (queue2 !! 0)], msgs)
-  where
-    queueName :: String -> String
-    queueName q =
-      let q' = map toUpper q
-      in if q' == "X" then "S"
-         else if q' `elem` ["S", "S96", "L128", "L256", "L512", "G", "V", "VW", "SW", "H"]
-              then q
-              else error $ "Error: Unknown queue name : " ++ q
+  let queues = concatMap (\x -> case x of OptQueue s -> [s]; _ -> []) flags
+  in if length queues == 0
+     then WriterT $ Identity (["-q", "S"],  ["More than 1 queue is specified. Using the first one."])
+     else return $ concat $ map (\x -> ["-q"] ++ [x]) queues
 
 chooseWalltime :: [Flag] -> Writer [String] [String]
 chooseWalltime flags =
