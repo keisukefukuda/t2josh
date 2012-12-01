@@ -61,10 +61,10 @@ Examples:
     "-l select=8:mpiprocs=3:ncpus=12:mem=50gb:gpus=3 -l place=scatter"
 
 ** -s 32:1:12
-Run 32*1 MPI processes, with 3 GPUs and 12 OpenMP threads for each process.
+  Run 32*1 MPI processes, with 3 GPUs and 12 OpenMP threads for each process.
 
-Equivalent to:
-  -l select=32:mpiprocs=1:ncpus=12:gpus=3 -l place=scatter
+  Equivalent to:
+    -l select=32:mpiprocs=1:ncpus=12:gpus=3 -l place=scatter
 -}
 
 main :: IO()
