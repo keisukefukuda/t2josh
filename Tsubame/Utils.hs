@@ -1,8 +1,10 @@
 module Tsubame.Utils (
   wtime2sec,
-  compWtime
+  compWtime,
+  strJoin
 ) where
 
+import Data.List
 import qualified Data.Text as T
 import Debug.Trace
 
@@ -26,3 +28,5 @@ wtime2sec str =
 compWtime :: String -> String -> Ordering
 compWtime s1 s2 = compare (wtime2sec s1) (wtime2sec s2)
 
+strJoin :: String -> [String] -> String
+strJoin sep = concat . (intersperse sep)
