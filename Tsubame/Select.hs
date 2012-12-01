@@ -36,7 +36,7 @@ parseSelect str =
          then error ("Invalid select specification: " ++ str)
          else (True, p !! 0, p !! 1, 0) -- #nodes and #mpiprocs are specified
     3 -> let nodes = p !! 0
-             mpi   = p !! 1
+             mpi   = max (p !! 1) 1
              omp   = p !! 2
          in if nodes == 0
             then (False, 0, 0, 12)
